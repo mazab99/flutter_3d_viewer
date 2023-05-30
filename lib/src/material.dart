@@ -6,8 +6,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as path;
 import 'dart:ui';
 
-class Material {
-  Material()
+class Material3DViewer {
+  Material3DViewer()
       : name = '',
         ambient = Vector3.all(0.1),
         diffuse = Vector3.all(0.8),
@@ -36,11 +36,9 @@ class Material {
   String mapKe;
 }
 
-/// Loading material from Material Library File (.mtl).
-/// Reference：http://paulbourke.net/dataformats/mtl/
-///
-Future<Map<String, Material>> loadMtl(String fileName, {bool isAsset = true}) async {
-  final materials = Map<String, Material>();
+Future<Map<String, Material3DViewer>> loadMtl(String fileName,
+    {bool isAsset = true}) async {
+  final materials = Map<String, Material3DViewer>();
   String data;
   try {
     if (isAsset) {
@@ -53,12 +51,12 @@ Future<Map<String, Material>> loadMtl(String fileName, {bool isAsset = true}) as
   }
   final List<String> lines = data.split('\n');
 
-  Material material = Material();
+  Material3DViewer material = Material3DViewer();
   for (String line in lines) {
     List<String> parts = line.trim().split(RegExp(r"\s+"));
     switch (parts[0]) {
       case 'newmtl':
-        material = Material();
+        material = Material3DViewer();
         if (parts.length >= 2) {
           material.name = parts[1];
           materials[material.name] = material;
@@ -66,25 +64,29 @@ Future<Map<String, Material>> loadMtl(String fileName, {bool isAsset = true}) as
         break;
       case 'Ka':
         if (parts.length >= 4) {
-          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]), double.parse(parts[3]));
+          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]),
+              double.parse(parts[3]));
           material.ambient = v;
         }
         break;
       case 'Kd':
         if (parts.length >= 4) {
-          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]), double.parse(parts[3]));
+          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]),
+              double.parse(parts[3]));
           material.diffuse = v;
         }
         break;
       case 'Ks':
         if (parts.length >= 4) {
-          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]), double.parse(parts[3]));
+          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]),
+              double.parse(parts[3]));
           material.specular = v;
         }
         break;
       case 'Ke':
         if (parts.length >= 4) {
-          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]), double.parse(parts[3]));
+          final v = Vector3(double.parse(parts[1]), double.parse(parts[2]),
+              double.parse(parts[3]));
           material.ke = v;
         }
         break;
@@ -129,7 +131,8 @@ Future<Image> loadImageFromAsset(String fileName, {bool isAsset = true}) {
   final c = Completer<Image>();
   var dataFuture;
   if (isAsset) {
-    dataFuture = rootBundle.load(fileName).then((data) => data.buffer.asUint8List());
+    dataFuture =
+        rootBundle.load(fileName).then((data) => data.buffer.asUint8List());
   } else {
     dataFuture = File(fileName).readAsBytes();
   }
@@ -146,7 +149,9 @@ Future<Image> loadImageFromAsset(String fileName, {bool isAsset = true}) {
 }
 
 /// load texture from asset
-Future<MapEntry<String, Image>?> loadTexture(Material? material, String basePath, {bool isAsset = true}) async {
+Future<MapEntry<String, Image>?> loadTexture(
+    Material3DViewer? material, String basePath,
+    {bool isAsset = true}) async {
   // get the texture file name
   if (material == null) return null;
   String fileName = material.mapKa;
@@ -180,7 +185,8 @@ Future<Uint32List> getImagePixels(Image image) async {
 
 /// Convert Vector3 to Color
 Color toColor(Vector3 v, [double opacity = 1.0]) {
-  return Color.fromRGBO((v.r * 255).toInt(), (v.g * 255).toInt(), (v.b * 255).toInt(), opacity);
+  return Color.fromRGBO(
+      (v.r * 255).toInt(), (v.g * 255).toInt(), (v.b * 255).toInt(), opacity);
 }
 
 /// Convert Color to Vector3

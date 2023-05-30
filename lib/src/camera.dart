@@ -1,8 +1,18 @@
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart';
 
-class Camera {
-  Camera({
+class Camera3DViewer {
+  final Vector3 position = Vector3(0.0, 0.0, -10.0);
+  final Vector3 target = Vector3(0.0, 0.0, 0.0);
+  final Vector3 up = Vector3(0.0, 1.0, 0.0);
+  double fov;
+  double near;
+  double far;
+  double zoom;
+  double viewportWidth;
+  double viewportHeight;
+
+  Camera3DViewer({
     Vector3? position,
     Vector3? target,
     Vector3? up,
@@ -17,16 +27,6 @@ class Camera {
     if (target != null) target.copyInto(this.target);
     if (up != null) up.copyInto(this.up);
   }
-
-  final Vector3 position = Vector3(0.0, 0.0, -10.0);
-  final Vector3 target = Vector3(0.0, 0.0, 0.0);
-  final Vector3 up = Vector3(0.0, 1.0, 0.0);
-  double fov;
-  double near;
-  double far;
-  double zoom;
-  double viewportWidth;
-  double viewportHeight;
 
   double get aspectRatio => viewportWidth / viewportHeight;
 

@@ -9,8 +9,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as path;
 import 'material.dart';
 
-class Polygon {
-  Polygon(this.vertex0, this.vertex1, this.vertex2, [this.sumOfZ = 0]);
+class Polygon3DViewer {
+  Polygon3DViewer(this.vertex0, this.vertex1, this.vertex2, [this.sumOfZ = 0]);
   int vertex0;
   int vertex1;
   int vertex2;
@@ -24,7 +24,7 @@ class Polygon {
   }
 }
 
-// wolcy97: 2020-01-31
+
 int _getVertexIndex(String vIndex) {
   if (int.parse(vIndex) < 0)
     return int.parse(vIndex) + 1;
@@ -32,35 +32,32 @@ int _getVertexIndex(String vIndex) {
     return int.parse(vIndex) - 1;
 }
 
-class Mesh {
-  Mesh({List<Vector3>? vertices, List<Offset>? texcoords, List<Polygon>? indices, List<Color>? colors, this.texture, Rect? textureRect, this.texturePath, Material? material, this.name}) {
+class Mesh3DViewer {
+  Mesh3DViewer({List<Vector3>? vertices, List<Offset>? texcoords, List<Polygon3DViewer>? indices, List<Color>? colors, this.texture, Rect? textureRect, this.texturePath, Material3DViewer? material, this.name}) {
     this.vertices = vertices ?? <Vector3>[];
     this.texcoords = texcoords ?? <Offset>[];
     this.colors = colors ?? <Color>[];
-    this.indices = indices ?? <Polygon>[];
-    this.material = material ?? Material();
+    this.indices = indices ?? <Polygon3DViewer>[];
+    this.material = material ?? Material3DViewer();
     this.textureRect = textureRect ?? Rect.fromLTWH(0, 0, texture?.width.toDouble() ?? 1.0, texture?.height.toDouble() ?? 1.0);
   }
   late List<Vector3> vertices;
   late List<Offset> texcoords;
   late List<Color> colors;
-  late List<Polygon> indices;
+  late List<Polygon3DViewer> indices;
   Image? texture;
   late Rect textureRect;
   String? texturePath;
-  late Material material;
+  late Material3DViewer material;
   String? name;
 }
 
-/// Loading mesh from Wavefront's object file (.obj).
-/// Reference：http://paulbourke.net/dataformats/obj/
-///
-Future<List<Mesh>> loadObj(String fileName, bool normalized, {bool isAsset = true}) async {
-  Map<String, Material>? materials;
+Future<List<Mesh3DViewer>> loadObj(String fileName, bool normalized, {bool isAsset = true}) async {
+  Map<String, Material3DViewer>? materials;
   List<Vector3> vertices = <Vector3>[];
   List<Offset> texcoords = <Offset>[];
-  List<Polygon> vertexIndices = <Polygon>[];
-  List<Polygon> textureIndices = <Polygon>[];
+  List<Polygon3DViewer> vertexIndices = <Polygon3DViewer>[];
+  List<Polygon3DViewer> textureIndices = <Polygon3DViewer>[];
   List<String> elementNames = <String>[];
   List<String> elementMaterials = <String>[];
   List<int> elementOffsets = <int>[];
@@ -128,20 +125,20 @@ Future<List<Mesh>> loadObj(String fileName, bool normalized, {bool isAsset = tru
           final List<String> p1 = parts[1].split('/');
           final List<String> p2 = parts[2].split('/');
           final List<String> p3 = parts[3].split('/');
-          Polygon vi = Polygon(_getVertexIndex(p1[0]), _getVertexIndex(p2[0]), _getVertexIndex(p3[0]));
+          Polygon3DViewer vi = Polygon3DViewer(_getVertexIndex(p1[0]), _getVertexIndex(p2[0]), _getVertexIndex(p3[0]));
           vertexIndices.add(vi);
-          Polygon ti = Polygon(0, 0, 0);
+          Polygon3DViewer ti = Polygon3DViewer(0, 0, 0);
           if ((p1.length >= 2 && p1[1] != '') && (p2.length >= 2 && p2[1] != '') && (p3.length >= 2 && p3[1] != '')) {
-            ti = Polygon(_getVertexIndex(p1[1]), _getVertexIndex(p2[1]), _getVertexIndex(p3[1]));
+            ti = Polygon3DViewer(_getVertexIndex(p1[1]), _getVertexIndex(p2[1]), _getVertexIndex(p3[1]));
             textureIndices.add(ti);
           }
           // polygon to triangle. eg: f 1/1 2/2 3/3 4/4 ==> f 1/1 2/2 3/3 + f 1/1 3/3 4/4
           for (int i = 4; i < parts.length; i++) {
             final List<String> p3 = parts[i].split('/');
-            vi = Polygon(vi.vertex0, vi.vertex2, _getVertexIndex(p3[0]));
+            vi = Polygon3DViewer(vi.vertex0, vi.vertex2, _getVertexIndex(p3[0]));
             vertexIndices.add(vi);
             if (p3.length >= 2 && p3[1] != '') {
-              ti = Polygon(ti.vertex0, ti.vertex2, _getVertexIndex(p3[1]));
+              ti = Polygon3DViewer(ti.vertex0, ti.vertex2, _getVertexIndex(p3[1]));
               textureIndices.add(ti);
             }
           }
@@ -165,13 +162,12 @@ Future<List<Mesh>> loadObj(String fileName, bool normalized, {bool isAsset = tru
   return normalized ? normalizeMesh(meshes) : meshes;
 }
 
-/// Load the texture image file and rebuild vertices and texcoords to keep the same length.
-Future<List<Mesh>> _buildMesh(
+Future<List<Mesh3DViewer>> _buildMesh(
   List<Vector3> vertices,
   List<Offset> texcoords,
-  List<Polygon> vertexIndices,
-  List<Polygon> textureIndices,
-  Map<String, Material>? materials,
+  List<Polygon3DViewer> vertexIndices,
+  List<Polygon3DViewer> textureIndices,
+  Map<String, Material3DViewer>? materials,
   List<String> elementNames,
   List<String> elementMaterials,
   List<int> elementOffsets,
@@ -184,15 +180,15 @@ Future<List<Mesh>> _buildMesh(
     elementOffsets.add(0);
   }
 
-  final List<Mesh> meshes = <Mesh>[];
+  final List<Mesh3DViewer> meshes = <Mesh3DViewer>[];
   for (int index = 0; index < elementOffsets.length; index++) {
     int faceStart = elementOffsets[index];
     int faceEnd = (index + 1 < elementOffsets.length) ? elementOffsets[index + 1] : vertexIndices.length;
 
     var newVertices = <Vector3>[];
     var newTexcoords = <Offset>[];
-    var newIndices = <Polygon>[];
-    var newTextureIndices = <Polygon>[];
+    var newIndices = <Polygon3DViewer>[];
+    var newTextureIndices = <Polygon3DViewer>[];
 
     if (faceStart == 0 && faceEnd == vertexIndices.length) {
       newVertices = vertices;
@@ -205,8 +201,8 @@ Future<List<Mesh>> _buildMesh(
     }
 
     // load texture image from assets.
-    final Material? material = (materials != null) ? materials[elementMaterials[index]] : null;
-    final MapEntry<String, Image>? imageEntry = await loadTexture(material, basePath);
+    final Material3DViewer? material = (materials != null) ? materials[elementMaterials[index]] : null;
+    final MapEntry<String, Image>? imageEntry = await loadTexture(material, basePath, isAsset: isAsset);
 
     // fix zero texture area
     if (imageEntry != null) {
@@ -217,7 +213,7 @@ Future<List<Mesh>> _buildMesh(
     // then create a vertex for each texture coordinate.
     _rebuildVertices(newVertices, newTexcoords, newIndices, newTextureIndices);
 
-    final Mesh mesh = Mesh(
+    final Mesh3DViewer mesh = Mesh3DViewer(
       vertices: newVertices,
       texcoords: newTexcoords,
       indices: newIndices,
@@ -233,7 +229,7 @@ Future<List<Mesh>> _buildMesh(
 }
 
 /// Copy a mesh from the obj
-void _copyRangeIndices<type>(int start, int end, List<type> fromVertices, List<Polygon> fromIndices, List<type> toVertices, List<Polygon> toIndices) {
+void _copyRangeIndices<type>(int start, int end, List<type> fromVertices, List<Polygon3DViewer> fromIndices, List<type> toVertices, List<Polygon3DViewer> toIndices) {
   if (start < 0 || end > fromIndices.length) return;
   final faceMap = List<int?>.filled(fromVertices.length, null);
   final List<int> face = List<int>.filled(3, 0);
@@ -251,14 +247,14 @@ void _copyRangeIndices<type>(int start, int end, List<type> fromVertices, List<P
         face[j] = v;
       }
     }
-    toIndices.add(Polygon(face[0], face[1], face[2]));
+    toIndices.add(Polygon3DViewer(face[0], face[1], face[2]));
   }
 }
 
 /// Remap the UVs when the texture area is zero.
-void _remapZeroAreaUVs(List<Offset> texcoords, List<Polygon> textureIndices, double textureWidth, double textureHeight) {
+void _remapZeroAreaUVs(List<Offset> texcoords, List<Polygon3DViewer> textureIndices, double textureWidth, double textureHeight) {
   for (int index = 0; index < textureIndices.length; index++) {
-    Polygon p = textureIndices[index];
+    Polygon3DViewer p = textureIndices[index];
     if (texcoords[p.vertex0] == texcoords[p.vertex1] && texcoords[p.vertex0] == texcoords[p.vertex2]) {
       double u = (texcoords[p.vertex0].dx * textureWidth).floorToDouble();
       double v = (texcoords[p.vertex0].dy * textureHeight).floorToDouble();
@@ -278,7 +274,7 @@ void _remapZeroAreaUVs(List<Offset> texcoords, List<Polygon> textureIndices, dou
 }
 
 /// Rebuild vertices and texture coordinates to keep the same length.
-void _rebuildVertices(List<Vector3> vertices, List<Offset> texcoords, List<Polygon> vertexIndices, List<Polygon> textureIndices) {
+void _rebuildVertices(List<Vector3> vertices, List<Offset> texcoords, List<Polygon3DViewer> vertexIndices, List<Polygon3DViewer> textureIndices) {
   int texcoordsCount = texcoords.length;
   if (texcoordsCount == 0) return;
   List<Vector3> newVertices = <Vector3>[];
@@ -318,9 +314,9 @@ Vector3 normalVector(Vector3 a, Vector3 b, Vector3 c) {
 }
 
 /// Scale the model size to 1
-List<Mesh> normalizeMesh(List<Mesh> meshes) {
+List<Mesh3DViewer> normalizeMesh(List<Mesh3DViewer> meshes) {
   double maxLength = 0;
-  for (Mesh mesh in meshes) {
+  for (Mesh3DViewer mesh in meshes) {
     final List<Vector3> vertices = mesh.vertices;
     for (int i = 0; i < vertices.length; i++) {
       final storage = vertices[i].storage;
@@ -334,7 +330,7 @@ List<Mesh> normalizeMesh(List<Mesh> meshes) {
   }
 
   maxLength = 0.5 / maxLength;
-  for (Mesh mesh in meshes) {
+  for (Mesh3DViewer mesh in meshes) {
     final List<Vector3> vertices = mesh.vertices;
     for (int i = 0; i < vertices.length; i++) {
       vertices[i].scale(maxLength);
@@ -343,20 +339,17 @@ List<Mesh> normalizeMesh(List<Mesh> meshes) {
   return meshes;
 }
 
-// Packing all textures to a single image.
-/// Reference：https://observablehq.com/@mourner/simple-rectangle-packing
-///
-Future<Image?> packingTexture(List<Mesh> meshes) async {
+Future<Image?> packingTexture(List<Mesh3DViewer> meshes) async {
   // generate a key for a mesh.
-  String getMeshKey(Mesh mesh) {
+  String getMeshKey(Mesh3DViewer mesh) {
     if (mesh.texture != null) return mesh.texturePath ?? '' + mesh.textureRect.toString();
     return toColor(mesh.material.diffuse.bgr).toString();
   }
 
   // only pack the different textures.
   final allMeshes = meshes;
-  final textures = Map<String, Mesh>();
-  for (Mesh mesh in allMeshes) {
+  final textures = Map<String, Mesh3DViewer>();
+  for (Mesh3DViewer mesh in allMeshes) {
     if (mesh.vertices.length == 0) continue;
     final String key = getMeshKey(mesh);
     textures.putIfAbsent(key, () => mesh);
@@ -369,17 +362,17 @@ Future<Image?> packingTexture(List<Mesh> meshes) async {
   // packing
   double area = 0;
   double maxWidth = 0;
-  for (Mesh mesh in meshes) {
+  for (Mesh3DViewer mesh in meshes) {
     area += mesh.textureRect.width * mesh.textureRect.height;
     maxWidth = math.max(maxWidth, mesh.textureRect.width);
   }
-  meshes.sort((Mesh a, Mesh b) => b.textureRect.height.compareTo(a.textureRect.height));
+  meshes.sort((Mesh3DViewer a, Mesh3DViewer b) => b.textureRect.height.compareTo(a.textureRect.height));
 
   final double startWidth = math.max(math.sqrt(area / 0.95), maxWidth);
   final List<Rect> spaces = <Rect>[];
   spaces.add(Rect.fromLTWH(0, 0, startWidth, double.infinity));
 
-  for (Mesh mesh in meshes) {
+  for (Mesh3DViewer mesh in meshes) {
     for (int i = spaces.length - 1; i >= 0; i--) {
       final Rect block = mesh.textureRect;
       final Rect space = spaces[i];
@@ -403,7 +396,7 @@ Future<Image?> packingTexture(List<Mesh> meshes) async {
   // get the packed texture size
   int textureWidth = 0;
   int textureHeight = 0;
-  for (Mesh mesh in meshes) {
+  for (Mesh3DViewer mesh in meshes) {
     final Rect box = mesh.textureRect;
     if (textureWidth < box.left + box.width) textureWidth = (box.left + box.width).ceil();
     if (textureHeight < box.top + box.height) textureHeight = (box.top + box.height).ceil();
@@ -411,7 +404,7 @@ Future<Image?> packingTexture(List<Mesh> meshes) async {
 
   // get the pixels from mesh.texture
   final texture = Uint32List(textureWidth * textureHeight);
-  for (Mesh mesh in meshes) {
+  for (Mesh3DViewer mesh in meshes) {
     final int imageWidth = mesh.textureRect.width.toInt();
     final int imageHeight = mesh.textureRect.height.toInt();
     Uint32List pixels;
@@ -444,7 +437,7 @@ Future<Image?> packingTexture(List<Mesh> meshes) async {
   }
 
   // apply the packed textureRect to all meshes.
-  for (Mesh mesh in allMeshes) {
+  for (Mesh3DViewer mesh in allMeshes) {
     final String? key = getMeshKey(mesh);
     if (key != null) {
       final Rect? rect = textures[key]?.textureRect;

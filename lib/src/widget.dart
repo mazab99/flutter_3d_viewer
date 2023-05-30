@@ -1,28 +1,29 @@
-import 'dart:ui';
 import 'package:flutter/widgets.dart' hide Image;
 import 'package:vector_math/vector_math_64.dart';
 import 'scene.dart';
 
-typedef void SceneCreatedCallback(Scene scene);
+typedef void SceneCreatedCallback(Scene3DViewer scene);
 
-class Cube extends StatefulWidget {
-  Cube({
-    Key? key,
-    this.interactive = true,
-    this.onSceneCreated,
-    this.onObjectCreated,
-  }) : super(key: key);
-
+class Flutter3DViewer extends StatefulWidget {
   final bool interactive;
   final SceneCreatedCallback? onSceneCreated;
   final ObjectCreatedCallback? onObjectCreated;
 
+  Flutter3DViewer({
+    Key? key,
+    this.interactive = true,
+    this.zoom = true,
+    this.onSceneCreated,
+    this.onObjectCreated,
+  }) : super(key: key);
+  final bool zoom;
+
   @override
-  _CubeState createState() => _CubeState();
+  _Flutter3DViewerState createState() => _Flutter3DViewerState();
 }
 
-class _CubeState extends State<Cube> {
-  late Scene scene;
+class _Flutter3DViewerState extends State<Flutter3DViewer> {
+  late Scene3DViewer scene;
   late Offset _lastFocalPoint;
   double? _lastZoom;
 
@@ -32,21 +33,27 @@ class _CubeState extends State<Cube> {
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details) {
-    scene.camera.trackBall(toVector2(_lastFocalPoint), toVector2(details.localFocalPoint), 1.5);
+    scene.camera.trackBall(
+        toVector2(_lastFocalPoint), toVector2(details.localFocalPoint), 1.5);
     _lastFocalPoint = details.localFocalPoint;
-    if (_lastZoom == null) {
-      _lastZoom = scene.camera.zoom;
-    } else {
-      scene.camera.zoom = _lastZoom! * details.scale;
+    if (widget.zoom) {
+      if (_lastZoom == null) {
+        _lastZoom = scene.camera.zoom;
+      } else {
+        scene.camera.zoom = _lastZoom! * details.scale;
+      }
     }
+
     setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
-    scene = Scene(
-      onUpdate: () => setState(() {}),
+    scene = Scene3DViewer(
+      onUpdate: () {
+        if (mounted) setState(() {});
+      },
       onObjectCreated: widget.onObjectCreated,
     );
     // prevent setState() or markNeedsBuild called during build
@@ -57,7 +64,8 @@ class _CubeState extends State<Cube> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
       scene.camera.viewportWidth = constraints.maxWidth;
       scene.camera.viewportHeight = constraints.maxHeight;
       final customPaint = CustomPaint(
@@ -76,7 +84,8 @@ class _CubeState extends State<Cube> {
 }
 
 class _CubePainter extends CustomPainter {
-  final Scene _scene;
+  final Scene3DViewer _scene;
+
   const _CubePainter(this._scene);
 
   @override

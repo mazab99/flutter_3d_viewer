@@ -4,8 +4,8 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'material.dart';
 
-class Light {
-  Light({Vector3? position, Color? color, double ambient = 0.1, double diffuse = 0.8, double specular = 0.5}) {
+class Light3DViewer {
+  Light3DViewer({Vector3? position, Color? color, double ambient = 0.1, double diffuse = 0.8, double specular = 0.5}) {
     position?.copyInto(this.position);
     setColor(color, ambient, diffuse, specular);
   }
@@ -21,7 +21,7 @@ class Light {
     this.specular.setFrom(c * specular);
   }
 
-  Color shading(Vector3 viewPosition, Vector3 fragmentPosition, Vector3 normal, Material material) {
+  Color shading(Vector3 viewPosition, Vector3 fragmentPosition, Vector3 normal, Material3DViewer material) {
     final Vector3 ambient = material.ambient.clone()..multiply(this.ambient);
     final Vector3 lightDir = (position - fragmentPosition)..normalize();
     final double diff = math.max(normal.dot(lightDir), 0);

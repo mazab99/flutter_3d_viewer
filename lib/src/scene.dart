@@ -7,18 +7,18 @@ import 'mesh.dart';
 import 'material.dart';
 import 'light.dart';
 
-typedef ObjectCreatedCallback = void Function(Object object);
+typedef ObjectCreatedCallback = void Function(Object3DViewer object);
 
-class Scene {
-  Scene({VoidCallback? onUpdate, ObjectCreatedCallback? onObjectCreated}) {
+class Scene3DViewer {
+  Scene3DViewer({VoidCallback? onUpdate, ObjectCreatedCallback? onObjectCreated}) {
     this._onUpdate = onUpdate;
     this._onObjectCreated = onObjectCreated;
-    world = Object(scene: this);
+    world = Object3DViewer(scene: this);
   }
 
-  Light light = Light();
-  Camera camera = Camera();
-  late Object world;
+  Light3DViewer light = Light3DViewer();
+  Camera3DViewer camera = Camera3DViewer();
+  late Object3DViewer world;
   Image? texture;
   BlendMode blendMode = BlendMode.srcOver;
   BlendMode textureBlendMode = BlendMode.srcOver;
@@ -29,10 +29,10 @@ class Scene {
   bool _needsUpdateTexture = false;
 
   // calculate the total number of vertices and faces
-  void _calculateVertices(Object o) {
+  void _calculateVertices(Object3DViewer o) {
     vertexCount += o.mesh.vertices.length;
     faceCount += o.mesh.indices.length;
-    final List<Object> children = o.children;
+    final List<Object3DViewer> children = o.children;
     for (int i = 0; i < children.length; i++) {
       _calculateVertices(children[i]);
     }
@@ -86,7 +86,7 @@ class Scene {
     return false;
   }
 
-  void _renderObject(RenderMesh renderMesh, Object o, Matrix4 model, Matrix4 view, Matrix4 projection) {
+  void _renderObject(RenderMesh renderMesh, Object3DViewer o, Matrix4 model, Matrix4 view, Matrix4 projection) {
     if (!o.visiable) return;
     model *= o.transform;
     final Matrix4 transform = projection * view * model;
@@ -118,13 +118,13 @@ class Scene {
     renderMesh.vertexCount += vertexCount;
 
     // add faces to renderMesh
-    final List<Polygon?> renderIndices = renderMesh.indices;
-    final List<Polygon> indices = o.mesh.indices;
+    final List<Polygon3DViewer?> renderIndices = renderMesh.indices;
+    final List<Polygon3DViewer> indices = o.mesh.indices;
     final int indexOffset = renderMesh.indexCount;
     final int indexCount = indices.length;
     final bool culling = o.backfaceCulling;
     for (int i = 0; i < indexCount; i++) {
-      final Polygon p = indices[i];
+      final Polygon3DViewer p = indices[i];
       final int vertex0 = vertexOffset + p.vertex0;
       final int vertex1 = vertexOffset + p.vertex1;
       final int vertex2 = vertexOffset + p.vertex2;
@@ -140,7 +140,7 @@ class Scene {
       if (!culling || !_isBackFace(ax, ay, bx, by, cx, cy)) {
         if (!_isClippedFace(ax, ay, az, bx, by, bz, cx, cy, cz)) {
           final double sumOfZ = az + bz + cz;
-          renderIndices[indexOffset + i] = Polygon(vertex0, vertex1, vertex2, sumOfZ);
+          renderIndices[indexOffset + i] = Polygon3DViewer(vertex0, vertex1, vertex2, sumOfZ);
         }
       }
     }
@@ -151,7 +151,7 @@ class Scene {
       final Matrix4 vertexTransform = model;
       final Matrix4 normalTransform = (model.clone()..invert()).transposed();
       final Vector3 viewPosition = camera.position;
-      final Material material = o.mesh.material;
+      final Material3DViewer material = o.mesh.material;
       final Vector3 a = Vector3.zero();
       final Vector3 b = Vector3.zero();
       final Vector3 c = Vector3.zero();
@@ -159,7 +159,7 @@ class Scene {
       for (int i = 0; i < indexCount; i++) {
         // check if the face is clipped
         if (renderIndices[indexOffset + i] != null) {
-          final Polygon p = indices[i];
+          final Polygon3DViewer p = indices[i];
           a.setFrom(vertices[p.vertex0]);
           b.setFrom(vertices[p.vertex1]);
           c.setFrom(vertices[p.vertex2]);
@@ -229,7 +229,7 @@ class Scene {
     }
 
     // render children
-    List<Object> children = o.children;
+    List<Object3DViewer> children = o.children;
     for (int i = 0; i < children.length; i++) {
       _renderObject(renderMesh, children[i], model, view, projection);
     }
@@ -247,16 +247,16 @@ class Scene {
     _renderObject(renderMesh, world, Matrix4.identity(), camera.lookAtMatrix, camera.projectionMatrix);
 
     // remove the culled faces and recreate list.
-    final List<Polygon> renderIndices = <Polygon>[];
-    final List<Polygon?> rawIndices = renderMesh.indices;
+    final List<Polygon3DViewer> renderIndices = <Polygon3DViewer>[];
+    final List<Polygon3DViewer?> rawIndices = renderMesh.indices;
     for (int i = 0; i < rawIndices.length; i++) {
-      final Polygon? p = rawIndices[i];
+      final Polygon3DViewer? p = rawIndices[i];
       if (p != null) renderIndices.add(p);
     }
     if (renderIndices.length == 0) return;
 
     // sort the faces by z
-    renderIndices.sort((Polygon a, Polygon b) {
+    renderIndices.sort((Polygon3DViewer a, Polygon3DViewer b) {
       // return b.sumOfZ.compareTo(a.sumOfZ);
       final double az = a.sumOfZ;
       final double bz = b.sumOfZ;
@@ -272,7 +272,7 @@ class Scene {
       final int index0 = i * 3;
       final int index1 = index0 + 1;
       final int index2 = index0 + 2;
-      final Polygon polygon = renderIndices[i];
+      final Polygon3DViewer polygon = renderIndices[i];
       indices[index0] = polygon.vertex0;
       indices[index1] = polygon.vertex1;
       indices[index2] = polygon.vertex2;
@@ -296,7 +296,7 @@ class Scene {
     canvas.drawVertices(vertices, textureBlendMode, paint);
   }
 
-  void objectCreated(Object object) {
+  void objectCreated(Object3DViewer object) {
     updateTexture();
     if (_onObjectCreated != null) _onObjectCreated!(object);
   }
@@ -305,16 +305,16 @@ class Scene {
     if (_onUpdate != null) _onUpdate!();
   }
 
-  void _getAllMesh(List<Mesh> meshes, Object object) {
+  void _getAllMesh(List<Mesh3DViewer> meshes, Object3DViewer object) {
     meshes.add(object.mesh);
-    final List<Object> children = object.children;
+    final List<Object3DViewer> children = object.children;
     for (int i = 0; i < children.length; i++) {
       _getAllMesh(meshes, children[i]);
     }
   }
 
   void _updateTexture() async {
-    final meshes = <Mesh>[];
+    final meshes = <Mesh3DViewer>[];
     _getAllMesh(meshes, world);
     texture = await packingTexture(meshes);
     update();
@@ -333,13 +333,13 @@ class RenderMesh {
     positionsZ = Float32List(vertexCount);
     texcoords = Float32List(vertexCount * 2);
     colors = Int32List(vertexCount);
-    indices = List<Polygon?>.filled(faceCount, null);
+    indices = List<Polygon3DViewer?>.filled(faceCount, null);
   }
   late Float32List positions;
   late Float32List positionsZ;
   late Float32List texcoords;
   late Int32List colors;
-  late List<Polygon?> indices;
+  late List<Polygon3DViewer?> indices;
   Image? texture;
   int vertexCount = 0;
   int indexCount = 0;

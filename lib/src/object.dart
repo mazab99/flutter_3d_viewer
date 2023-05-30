@@ -3,16 +3,16 @@ import 'package:vector_math/vector_math_64.dart';
 import 'scene.dart';
 import 'mesh.dart';
 
-class Object {
-  Object({
+class Object3DViewer {
+  Object3DViewer({
     Vector3? position,
     Vector3? rotation,
     Vector3? scale,
     this.name,
-    Mesh? mesh,
-    Scene? scene,
+    Mesh3DViewer? mesh,
+    Scene3DViewer? scene,
     this.parent,
-    List<Object>? children,
+    List<Object3DViewer>? children,
     this.backfaceCulling = true,
     this.lighting = false,
     this.visiable = true,
@@ -24,22 +24,22 @@ class Object {
     if (rotation != null) rotation.copyInto(this.rotation);
     if (scale != null) scale.copyInto(this.scale);
     updateTransform();
-    this.mesh = mesh ?? Mesh();
-    this.children = children ?? <Object>[];
-    for (Object child in this.children) {
+    this.mesh = mesh ?? Mesh3DViewer();
+    this.children = children ?? <Object3DViewer>[];
+    for (Object3DViewer child in this.children) {
       child.parent = this;
     }
     this.scene = scene;
 
     // load mesh from obj file
     if (fileName != null) {
-      loadObj(fileName, normalized, isAsset: isAsset).then((List<Mesh> meshes) {
+      loadObj(fileName, normalized, isAsset: isAsset).then((List<Mesh3DViewer> meshes) {
         if (meshes.length == 1) {
           this.mesh = meshes[0];
         } else if (meshes.length > 1) {
           // multiple objects
-          for (Mesh mesh in meshes) {
-            add(Object(name: mesh.name, mesh: mesh, backfaceCulling: backfaceCulling, lighting: lighting));
+          for (Mesh3DViewer mesh in meshes) {
+            add(Object3DViewer(name: mesh.name, mesh: mesh, backfaceCulling: backfaceCulling, lighting: lighting));
           }
         }
         this.scene?.objectCreated(this);
@@ -62,23 +62,23 @@ class Object {
   String? name;
 
   /// The scene of this object.
-  Scene? _scene;
-  Scene? get scene => _scene;
-  set scene(Scene? value) {
+  Scene3DViewer? _scene;
+  Scene3DViewer? get scene => _scene;
+  set scene(Scene3DViewer? value) {
     _scene = value;
-    for (Object child in children) {
+    for (Object3DViewer child in children) {
       child.scene = value;
     }
   }
 
   /// The parent of this object.
-  Object? parent;
+  Object3DViewer? parent;
 
   /// The children of this object.
-  late List<Object> children;
+  late List<Object3DViewer> children;
 
   /// The mesh of this object
-  late Mesh mesh;
+  late Mesh3DViewer mesh;
 
   /// The backface will be culled without rendering.
   bool backfaceCulling;
@@ -98,7 +98,7 @@ class Object {
   }
 
   /// Add a child
-  void add(Object object) {
+  void add(Object3DViewer object) {
     assert(object != this);
     object.scene = scene;
     object.parent = this;
@@ -106,15 +106,15 @@ class Object {
   }
 
   /// Remove a child
-  void remove(Object object) {
+  void remove(Object3DViewer object) {
     children.remove(object);
   }
 
   /// Find a child matching the name
-  Object? find(Pattern name) {
-    for (Object child in children) {
+  Object3DViewer? find(Pattern name) {
+    for (Object3DViewer child in children) {
       if (child.name != null && (name as RegExp).hasMatch(child.name!)) return child;
-      final Object? result = child.find(name);
+      final Object3DViewer? result = child.find(name);
       if (result != null) return result;
     }
     return null;
