@@ -23,3 +23,21 @@ missing a feature, please raise a ticket on Github and I'll look into it.
 Pull request are also welcome.# flutter_3d_viewer
 
 ```
+
+```dart
+import 'package:flutter_3d_viewer/flutter_3d_viewer.dart';
+  
+@override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Flutter3DViewer(
+          onSceneCreated: (Scene scene) {
+            scene.world.add(Object(fileName: ''));
+          },
+        ),
+      ),
+    );
+  }
+```
+
