@@ -33,7 +33,7 @@ import 'package:flutter_3d_viewer/flutter_3d_viewer.dart';
       body: Center(
         child: Flutter3DViewer(
           onSceneCreated: (Scene scene) {
-            scene.world.add(Object(fileName: ''));
+            Scene3DViewer.world.add(Object(fileName: ''));
           },
         ),
       ),
